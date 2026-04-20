@@ -26,4 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `ThemeApplier` for hex→UIColor, Dynamic Type, font customization
 - `AsyncDelegateBridge` for async/await verification API
 - Full accessibility: VoiceOver labels/hints/announcements, Dynamic Type up to XXXL, Reduce Motion, dark mode, RTL
-- 103 unit tests covering core types, networking, and capture
+- `IdentityKitStorage` module: `KeychainStore`, `OutboxQueue`, `BackgroundUploadManager`
+- Secure token storage via Keychain with `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`
+- File-based persistent outbox queue for resilient uploads
+- Actor-based background upload processor with retry and expiry
+- 125 unit and integration tests covering all modules

@@ -95,6 +95,16 @@ dependencies: [
 - [x] `ThemeApplier` — hex→UIColor, Dynamic Type fonts, corner radius
 - [x] Full accessibility: VoiceOver labels/hints, announcements, Dynamic Type, Reduce Motion
 
+### Milestone 5 — Liveness Flow (completed in M3+M4)
+- [x] `LivenessCaptureController` with challenge sequencing, timeout, key frame capture
+- [x] `LivenessViewController` with oval guide, animated challenge feedback
+
+### Milestone 6 — Storage & Resilience
+- [x] `KeychainStore` — secure token storage with `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`
+- [x] `OutboxQueue` — persistent file-based queue for failed uploads, survives app restarts
+- [x] `BackgroundUploadManager` — processes outbox with retry, expired item cleanup, actor-based concurrency guard
+- [x] 22 storage/integration tests (Keychain CRUD, queue persistence, upload retry/expiry)
+
 ## License
 
 MIT
