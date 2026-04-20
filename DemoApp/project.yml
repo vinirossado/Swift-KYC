@@ -1,0 +1,33 @@
+name: IdentityKitDemo
+options:
+  bundleIdPrefix: com.identitykit
+  deploymentTarget:
+    iOS: "16.0"
+  xcodeVersion: "15.0"
+
+packages:
+  IdentityKit:
+    path: ../
+
+targets:
+  IdentityKitDemo:
+    type: application
+    platform: iOS
+    sources:
+      - Sources
+    info:
+      path: Info.plist
+      properties:
+        UILaunchScreen: {}
+        CFBundleDisplayName: IdentityKit Demo
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+    settings:
+      base:
+        SWIFT_VERSION: "5.10"
+        TARGETED_DEVICE_FAMILY: "1"
+        PRODUCT_BUNDLE_IDENTIFIER: com.identitykit.demo
+        DEVELOPMENT_TEAM: ""
+    dependencies:
+      - package: IdentityKit
+        product: IdentityKitCore

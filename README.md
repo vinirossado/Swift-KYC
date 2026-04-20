@@ -105,6 +105,47 @@ dependencies: [
 - [x] `BackgroundUploadManager` — processes outbox with retry, expired item cleanup, actor-based concurrency guard
 - [x] 22 storage/integration tests (Keychain CRUD, queue persistence, upload retry/expiry)
 
+### Milestone 7 — Demo App
+- [x] SwiftUI app (iOS 16+) consuming the SDK
+- [x] Mock verification flow with step-by-step progress
+- [x] Result screen with document thumbnails and metadata
+- [x] Toggle to simulate network failure
+- [x] Environment picker (mock/staging)
+- [x] XcodeGen project for easy Xcode setup
+
+## How to Open & Run
+
+### SDK (Package)
+```bash
+# Open the SDK in Xcode (resolves all modules automatically)
+cd identity-kit
+open Package.swift
+```
+This opens the full SPM workspace. You can browse all 5 modules, run tests with `Cmd+U`.
+
+### Run Tests (CLI)
+```bash
+cd identity-kit
+swift test
+```
+
+### Demo App
+```bash
+cd identity-kit/DemoApp
+
+# Generate the Xcode project (requires xcodegen: brew install xcodegen)
+xcodegen generate
+
+# Open in Xcode
+open IdentityKitDemo.xcodeproj
+```
+Select a simulator (iPhone 17 Pro recommended), hit `Cmd+R` to run.
+
+### Run Tests in Xcode
+1. Open `Package.swift` in Xcode
+2. Select the `IdentityKit` scheme
+3. Press `Cmd+U` to run all 125 tests
+
 ## License
 
 MIT
