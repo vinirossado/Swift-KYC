@@ -35,7 +35,7 @@ public final class LivenessCaptureController: @unchecked Sendable {
         case error(IdentityKitError)
     }
 
-    private let sessionManager: CaptureSessionManager
+    public let captureSession: CaptureSessionManager
     private let faceAnalyzer: FaceQualityAnalyzer
     private let challenges: [LivenessChallenge]
     private let challengeTimeout: TimeInterval
@@ -60,7 +60,7 @@ public final class LivenessCaptureController: @unchecked Sendable {
     ) {
         self.challenges = challenges
         self.challengeTimeout = challengeTimeout
-        self.sessionManager = sessionManager
+        self.captureSession = sessionManager
         self.faceAnalyzer = faceAnalyzer
         self.logger = logger
 
@@ -80,17 +80,17 @@ public final class LivenessCaptureController: @unchecked Sendable {
             throw IdentityKitError.invalidConfiguration(reason: "No liveness challenges configured")
         }
 
-        try await sessionManager.configure(position: .front) { [weak self] sampleBuffer in
+        try await captureSession.configure(position: .front) { [weak self] sampleBuffer in
             self?.processFrame(sampleBuffer)
         }
 
-        sessionManager.startSession()
+        captureSession.startSession()
         startNextChallenge()
     }
 
     /// Stops the capture session.
     public func stop() {
-        sessionManager.stopSession()
+        captureSession.stopSession()
         eventContinuation.finish()
     }
 

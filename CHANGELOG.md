@@ -22,4 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `IdentityKitCapture` module: `DocumentEdgeDetector`, `FaceQualityAnalyzer`, `CaptureSessionManager`, `DocumentCaptureController`, `LivenessCaptureController`
 - `CaptureQuality` aggregated quality assessment model
 - Challenge evaluation logic for blink (eye state), turn left/right (yaw angle)
+- `IdentityKitUI` module: `IdentityKit` facade, `IdentityKitFlowCoordinator`, `DocumentCaptureViewController`, `LivenessViewController`, `ResultReviewViewController`, `InstructionViewController`
+- `ThemeApplier` for hex→UIColor, Dynamic Type, font customization
+- `AsyncDelegateBridge` for async/await verification API
+- Full accessibility: VoiceOver labels/hints/announcements, Dynamic Type up to XXXL, Reduce Motion, dark mode, RTL
 - 103 unit tests covering core types, networking, and capture

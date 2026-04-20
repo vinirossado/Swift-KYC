@@ -85,6 +85,16 @@ dependencies: [
 - [x] Challenge evaluation logic (blink via eye state change, turn via yaw angle)
 - [x] 24 capture tests (Vision detection with synthetic images, quality, challenge evaluation)
 
+### Milestone 4 — UI Layer (UIKit)
+- [x] `IdentityKit` facade — delegate-based and `async/await` public APIs
+- [x] `IdentityKitFlowCoordinator` — coordinator pattern orchestrating Intro → Document → Liveness → Review
+- [x] `DocumentCaptureViewController` — camera preview, document overlay, real-time quality feedback
+- [x] `LivenessViewController` — oval face guide, challenge instructions, progress bar
+- [x] `ResultReviewViewController` — image review with confirm/retake
+- [x] `InstructionViewController` — reusable intro/instruction screen
+- [x] `ThemeApplier` — hex→UIColor, Dynamic Type fonts, corner radius
+- [x] Full accessibility: VoiceOver labels/hints, announcements, Dynamic Type, Reduce Motion
+
 ## License
 
 MIT

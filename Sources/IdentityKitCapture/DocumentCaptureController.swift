@@ -24,7 +24,7 @@ public final class DocumentCaptureController: @unchecked Sendable {
         case error(IdentityKitError)
     }
 
-    private let sessionManager: CaptureSessionManager
+    public let captureSession: CaptureSessionManager
     private let edgeDetector: DocumentEdgeDetector
     private let documentType: DocumentType
     private let logger: IdentityKitLogger
@@ -46,7 +46,7 @@ public final class DocumentCaptureController: @unchecked Sendable {
         logger: IdentityKitLogger = DefaultLogger()
     ) {
         self.documentType = documentType
-        self.sessionManager = sessionManager
+        self.captureSession = sessionManager
         self.edgeDetector = edgeDetector
         self.logger = logger
 
@@ -57,10 +57,10 @@ public final class DocumentCaptureController: @unchecked Sendable {
 
     /// Starts the document capture session.
     public func start() async throws {
-        try await sessionManager.configure(position: .back) { [weak self] sampleBuffer in
+        try await captureSession.configure(position: .back) { [weak self] sampleBuffer in
             self?.processFrame(sampleBuffer)
         }
-        sessionManager.startSession()
+        captureSession.startSession()
     }
 
     /// Triggers a manual capture of the current frame.
@@ -72,7 +72,7 @@ public final class DocumentCaptureController: @unchecked Sendable {
 
     /// Stops the capture session and cleans up.
     public func stop() {
-        sessionManager.stopSession()
+        captureSession.stopSession()
         eventContinuation.finish()
     }
 
