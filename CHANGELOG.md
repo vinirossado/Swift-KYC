@@ -30,4 +30,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Secure token storage via Keychain with `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`
 - File-based persistent outbox queue for resilient uploads
 - Actor-based background upload processor with retry and expiry
+- SwiftUI Demo app (iOS 16+) with mock verification flow
+- DocC documentation catalog with 5 articles (Getting Started, Errors, Appearance, Privacy)
+- GitHub Actions CI/CD workflows (PR build/test, release with XCFramework)
+- Fastlane lanes for test, build_xcframework, release
+- XCFramework build script for device + simulator
+- `SECURITY.md` and `CONTRIBUTING.md`
 - 125 unit and integration tests covering all modules

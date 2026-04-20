@@ -1,0 +1,10 @@
+# Scanfile — default parameters for `scan` (run_tests)
+# Used when building/testing the DemoApp via Fastlane.
+
+project("DemoApp/IdentityKitDemo.xcodeproj")
+scheme("IdentityKitDemo")
+device("iPhone 16")
+clean(true)
+code_coverage(true)
+output_directory("build/reports")
+output_types("html,junit")

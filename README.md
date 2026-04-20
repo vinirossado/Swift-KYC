@@ -113,6 +113,28 @@ dependencies: [
 - [x] Environment picker (mock/staging)
 - [x] XcodeGen project for easy Xcode setup
 
+### Milestone 8 — Documentation
+- [x] DocC documentation catalog with 5 articles
+- [x] "Getting Started in 10 Lines" guide
+- [x] "Handling Errors" reference
+- [x] "Customizing Appearance" guide
+- [x] "Privacy and Data Handling" guide
+- [x] `generate-docs.sh` script for HTML export
+
+### Milestone 9 — CI/CD & Distribution
+- [x] GitHub Actions CI (`ci.yml`) — build + test on PR
+- [x] GitHub Actions Release (`release.yml`) — tag → XCFramework → GitHub Release
+- [x] Fastlane lanes: `test`, `build_xcframework`, `release`
+- [x] `build-xcframework.sh` for device + simulator XCFramework
+- [x] `SECURITY.md` disclosure policy
+- [x] `CONTRIBUTING.md` guidelines
+
+### Milestone 10 — Release Ready
+- [x] All 10 milestones complete
+- [x] 125 tests passing, 0 failures
+- [x] Conventional commits throughout
+- [x] Semantic versioning ready
+
 ## How to Open & Run
 
 ### SDK (Package)

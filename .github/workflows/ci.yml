@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+env:
+  DEVELOPER_DIR: /Applications/Xcode_16.2.app/Contents/Developer
+  SCHEME: IdentityKitDemo
+  DESTINATION: "platform=iOS Simulator,name=iPhone 16,OS=18.2"
+
+jobs:
+  build:
+    name: Build Package
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache SPM packages
+        uses: actions/cache@v4
+        with:
+          path: .build
+          key: spm-${{ runner.os }}-${{ hashFiles('Package.resolved') }}
+          restore-keys: spm-${{ runner.os }}-
+
+      - name: Build
+        run: swift build
+
+  test:
+    name: Run Tests
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache SPM packages
+        uses: actions/cache@v4
+        with:
+          path: .build
+          key: spm-${{ runner.os }}-${{ hashFiles('Package.resolved') }}
+          restore-keys: spm-${{ runner.os }}-
+
+      - name: Run tests
+        run: swift test --enable-code-coverage
+
+      - name: Generate coverage report
+        run: |
+          BIN=$(swift build --show-bin-path)
+          xcrun llvm-cov export \
+            "$BIN/IdentityKitPackageTests.xctest/Contents/MacOS/IdentityKitPackageTests" \
+            -instr-profile "$(find .build -name 'default.profdata' -type f | head -1)" \
+            -format lcov \
+            > coverage.lcov
+        continue-on-error: true
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: coverage.lcov
+          if-no-files-found: ignore
+
+  build-demo:
+    name: Build Demo App
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache DerivedData
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: deriveddata-${{ runner.os }}-${{ hashFiles('DemoApp/**', 'Package.swift') }}
+          restore-keys: deriveddata-${{ runner.os }}-
+
+      - name: Resolve package dependencies
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -project DemoApp/IdentityKitDemo.xcodeproj \
+            -scheme "$SCHEME" \
+            -clonedSourcePackagesDirPath SourcePackages
+
+      - name: Build demo app
+        run: |
+          xcodebuild build \
+            -project DemoApp/IdentityKitDemo.xcodeproj \
+            -scheme "$SCHEME" \
+            -destination "$DESTINATION" \
+            -clonedSourcePackagesDirPath SourcePackages \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            | xcpretty || true

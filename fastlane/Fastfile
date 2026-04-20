@@ -1,0 +1,84 @@
+default_platform(:ios)
+
+FRAMEWORK_NAME = "IdentityKit"
+BUILD_DIR = "build"
+ARCHIVE_DIR = "#{BUILD_DIR}/archives"
+
+platform :ios do
+  # ───────────────────────────────────────────────
+  # Test
+  # ───────────────────────────────────────────────
+  desc "Run all package tests with code coverage"
+  lane :test do
+    sh("cd .. && swift test --enable-code-coverage")
+
+    # Attempt to generate an lcov report for downstream tools
+    bin_path = sh("cd .. && swift build --show-bin-path").strip
+    profdata = Dir.glob("../.build/**/default.profdata").first
+    if profdata
+      sh(
+        "xcrun llvm-cov export " \
+        "\"#{bin_path}/IdentityKitPackageTests.xctest/Contents/MacOS/IdentityKitPackageTests\" " \
+        "-instr-profile \"#{profdata}\" " \
+        "-format lcov > ../coverage.lcov"
+      )
+      UI.success("Coverage report written to coverage.lcov")
+    else
+      UI.important("Profdata not found — skipping coverage export")
+    end
+  end
+
+  # ───────────────────────────────────────────────
+  # Build XCFramework
+  # ───────────────────────────────────────────────
+  desc "Build XCFramework for iOS device + simulator"
+  lane :build_xcframework do
+    sh("cd .. && bash Scripts/build-xcframework.sh")
+    UI.success("XCFramework built at #{BUILD_DIR}/#{FRAMEWORK_NAME}.xcframework")
+  end
+
+  # ───────────────────────────────────────────────
+  # Release
+  # ───────────────────────────────────────────────
+  desc "Tag a new version and create a GitHub release"
+  lane :release do |options|
+    version = options[:version]
+    UI.user_error!("Missing :version parameter (e.g. fastlane release version:1.2.0)") unless version
+
+    ensure_git_status_clean
+
+    # ── Run tests first ──
+    test
+
+    # ── Build the binary artifact ──
+    build_xcframework
+
+    # ── Compress and checksum ──
+    sh("cd ../#{BUILD_DIR} && zip -r -y #{FRAMEWORK_NAME}.xcframework.zip #{FRAMEWORK_NAME}.xcframework")
+    checksum = sh("cd .. && swift package compute-checksum #{BUILD_DIR}/#{FRAMEWORK_NAME}.xcframework.zip").strip
+    UI.message("XCFramework SHA-256: #{checksum}")
+
+    # ── Update Package.swift binary target checksum if present ──
+    package_swift = File.read("../Package.swift")
+    if package_swift.include?("checksum:")
+      updated = package_swift.gsub(/checksum:\s*"[a-f0-9]+"/, "checksum: \"#{checksum}\"")
+      File.write("../Package.swift", updated)
+      git_add(path: "Package.swift")
+      git_commit(path: "Package.swift", message: "chore: update XCFramework checksum for #{version}")
+    end
+
+    # ── Tag ──
+    add_git_tag(tag: "v#{version}")
+    push_git_tags
+
+    # ── GitHub Release ──
+    sh(
+      "cd .. && gh release create v#{version} " \
+      "#{BUILD_DIR}/#{FRAMEWORK_NAME}.xcframework.zip " \
+      "--title \"#{FRAMEWORK_NAME} #{version}\" " \
+      "--generate-notes " \
+      "--verify-tag"
+    )
+    UI.success("Released #{FRAMEWORK_NAME} v#{version}")
+  end
+end

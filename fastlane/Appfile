@@ -1,0 +1,6 @@
+# Minimal Appfile for IdentityKit
+# Update these values when code-signing is configured.
+
+# app_identifier("com.identitykit.demo")
+# apple_id("your@email.com")
+# team_id("XXXXXXXXXX")
