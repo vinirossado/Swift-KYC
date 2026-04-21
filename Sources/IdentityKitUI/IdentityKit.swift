@@ -1,5 +1,6 @@
 #if canImport(UIKit)
 import UIKit
+import ObjectiveC
 import IdentityKitCore
 import IdentityKitCapture
 
@@ -27,7 +28,19 @@ public enum IdentityKit {
             delegate: delegate
         )
         coordinator.start()
-        return coordinator.viewController
+
+        let vc = coordinator.viewController
+
+        // Retain the coordinator on the view controller so it stays alive
+        // for the lifetime of the presented flow.
+        objc_setAssociatedObject(
+            vc,
+            &AssociatedKeys.coordinator,
+            coordinator,
+            .OBJC_ASSOCIATION_RETAIN_NONATOMIC
+        )
+
+        return vc
     }
 
     /// Runs the verification flow and returns the result asynchronously.
@@ -52,17 +65,37 @@ public enum IdentityKit {
             )
             coordinator.start()
 
-            // Prevent the coordinator and bridge from being deallocated.
+            // Retain both coordinator and bridge on the view controller.
             bridge.retainedCoordinator = coordinator
 
-            viewController.present(coordinator.viewController, animated: true)
+            let flowVC = coordinator.viewController
+            objc_setAssociatedObject(
+                flowVC,
+                &AssociatedKeys.coordinator,
+                coordinator,
+                .OBJC_ASSOCIATION_RETAIN_NONATOMIC
+            )
+            objc_setAssociatedObject(
+                flowVC,
+                &AssociatedKeys.bridge,
+                bridge,
+                .OBJC_ASSOCIATION_RETAIN_NONATOMIC
+            )
+
+            viewController.present(flowVC, animated: true)
         }
     }
 }
 
+// MARK: - Associated Object Keys
+
+private enum AssociatedKeys {
+    nonisolated(unsafe) static var coordinator = "identitykit_coordinator"
+    nonisolated(unsafe) static var bridge = "identitykit_bridge"
+}
+
 // MARK: - AsyncDelegateBridge
 
-/// Bridges the delegate callbacks into a single async continuation.
 @MainActor
 private final class AsyncDelegateBridge: IdentityKitDelegate {
     private var continuation: CheckedContinuation<VerificationResult, Error>?
@@ -90,8 +123,6 @@ private final class AsyncDelegateBridge: IdentityKitDelegate {
         retainedCoordinator = nil
     }
 
-    func identityKitUploadProgress(_ progress: Double) {
-        // Not forwarded in the async API — use the delegate API for progress.
-    }
+    func identityKitUploadProgress(_ progress: Double) {}
 }
 #endif
