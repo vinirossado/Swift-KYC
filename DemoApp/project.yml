@@ -30,4 +30,4 @@ targets:
         DEVELOPMENT_TEAM: ""
     dependencies:
       - package: IdentityKit
-        product: IdentityKitCore
+        product: IdentityKit

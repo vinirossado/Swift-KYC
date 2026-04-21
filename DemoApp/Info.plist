@@ -22,10 +22,6 @@
 	<string>1</string>
 	<key>UILaunchScreen</key>
 	<dict/>
-	<key>NSCameraUsageDescription</key>
-	<string>IdentityKit needs camera access to capture your identity document and verify your face.</string>
-	<key>NSFaceIDUsageDescription</key>
-	<string>IdentityKit may use Face ID for additional security verification.</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

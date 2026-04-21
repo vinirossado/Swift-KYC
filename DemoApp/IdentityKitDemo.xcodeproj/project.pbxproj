@@ -11,15 +11,17 @@
 		7C2544F847792B2ED93D0E76 /* VerificationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 869B30B6869E11E365B94DCC /* VerificationViewModel.swift */; };
 		AE39D3E3D9B7742320F15608 /* DemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE546D339F42AAF1CC7891C4 /* DemoApp.swift */; };
 		B7CE097A4E6CC5B847E16D05 /* ResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F76D8490F64C7C280867260 /* ResultView.swift */; };
+		BBEFAED680B41FE0CD257A4B /* SDKFlowBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C6E57CE2340E7955F36E73E /* SDKFlowBridge.swift */; };
 		BF487CF92A0B07496909A19E /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4CA174D0D4B8637F3E1016A /* ContentView.swift */; };
-		D1BE8AD608791B789B1BBE71 /* IdentityKitCore in Frameworks */ = {isa = PBXBuildFile; productRef = 53037B1B31E8621B047A4C6E /* IdentityKitCore */; };
+		D1BE8AD608791B789B1BBE71 /* IdentityKit in Frameworks */ = {isa = PBXBuildFile; productRef = 8BC10C972A430E2D98E5DA8A /* IdentityKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		869B30B6869E11E365B94DCC /* VerificationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerificationViewModel.swift; sourceTree = "<group>"; };
 		8F76D8490F64C7C280867260 /* ResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultView.swift; sourceTree = "<group>"; };
 		9387A1F3F12C81695A586662 /* VerificationFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerificationFlowView.swift; sourceTree = "<group>"; };
-		943846F3017A572FE1ED3571 /* IdentityKitDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IdentityKitDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		943846F3017A572FE1ED3571 /* IdentityKitDemo.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = IdentityKitDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9C6E57CE2340E7955F36E73E /* SDKFlowBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SDKFlowBridge.swift; sourceTree = "<group>"; };
 		E2BB9A27106386C16E15ADD0 /* identity-kit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "identity-kit"; path = ..; sourceTree = SOURCE_ROOT; };
 		EE546D339F42AAF1CC7891C4 /* DemoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoApp.swift; sourceTree = "<group>"; };
 		F4CA174D0D4B8637F3E1016A /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -30,7 +32,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D1BE8AD608791B789B1BBE71 /* IdentityKitCore in Frameworks */,
+				D1BE8AD608791B789B1BBE71 /* IdentityKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -43,6 +45,7 @@
 				F4CA174D0D4B8637F3E1016A /* ContentView.swift */,
 				EE546D339F42AAF1CC7891C4 /* DemoApp.swift */,
 				8F76D8490F64C7C280867260 /* ResultView.swift */,
+				9C6E57CE2340E7955F36E73E /* SDKFlowBridge.swift */,
 				9387A1F3F12C81695A586662 /* VerificationFlowView.swift */,
 				869B30B6869E11E365B94DCC /* VerificationViewModel.swift */,
 			);
@@ -90,7 +93,7 @@
 			);
 			name = IdentityKitDemo;
 			packageProductDependencies = (
-				53037B1B31E8621B047A4C6E /* IdentityKitCore */,
+				8BC10C972A430E2D98E5DA8A /* IdentityKit */,
 			);
 			productName = IdentityKitDemo;
 			productReference = 943846F3017A572FE1ED3571 /* IdentityKitDemo.app */;
@@ -104,6 +107,11 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					DD36F95F71593EBA225D13A5 = {
+						DevelopmentTeam = "";
+					};
+				};
 			};
 			buildConfigurationList = B81716CFA58C33C5F88F2C40 /* Build configuration list for PBXProject "IdentityKitDemo" */;
 			developmentRegion = en;
@@ -135,6 +143,7 @@
 				BF487CF92A0B07496909A19E /* ContentView.swift in Sources */,
 				AE39D3E3D9B7742320F15608 /* DemoApp.swift in Sources */,
 				B7CE097A4E6CC5B847E16D05 /* ResultView.swift in Sources */,
+				BBEFAED680B41FE0CD257A4B /* SDKFlowBridge.swift in Sources */,
 				41030F344F2AFD4C25A09832 /* VerificationFlowView.swift in Sources */,
 				7C2544F847792B2ED93D0E76 /* VerificationViewModel.swift in Sources */,
 			);
@@ -204,7 +213,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = BJYT7G6SPX;
+				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -285,7 +294,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = BJYT7G6SPX;
+				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -329,9 +338,9 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		53037B1B31E8621B047A4C6E /* IdentityKitCore */ = {
+		8BC10C972A430E2D98E5DA8A /* IdentityKit */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = IdentityKitCore;
+			productName = IdentityKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
