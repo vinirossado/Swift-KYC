@@ -27,6 +27,31 @@ platform :ios do
   end
 
   # ───────────────────────────────────────────────
+  # Screenshots
+  # ───────────────────────────────────────────────
+  desc "Generate portfolio screenshots of all SDK screens"
+  lane :screenshots do
+    sh("mkdir -p ../fastlane/screenshots")
+
+    # SPM snapshot tests run via xcodebuild with the package's auto-generated scheme
+    sh(
+      "cd .. && xcodebuild test " \
+      "-scheme IdentityKit-Package " \
+      "-destination 'platform=iOS Simulator,name=iPhone 16' " \
+      "-only-testing:IdentityKitSnapshotTests/ScreenshotGenerator " \
+      "| xcpretty || true"
+    )
+
+    screenshots_dir = File.expand_path("../fastlane/screenshots")
+    count = Dir.glob("#{screenshots_dir}/*.png").count
+    if count > 0
+      UI.success("#{count} screenshots saved to fastlane/screenshots/")
+    else
+      UI.important("No screenshots found — check test output above")
+    end
+  end
+
+  # ───────────────────────────────────────────────
   # Release
   # ───────────────────────────────────────────────
   desc "Tag a new version and create a GitHub release"

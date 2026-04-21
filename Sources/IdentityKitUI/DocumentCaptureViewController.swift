@@ -270,10 +270,11 @@ final class DocumentOverlayView: UIView {
         guard let context = UIGraphicsGetCurrentContext() else { return }
 
         // Semi-transparent overlay.
-        context.setFillColor(UIColor.black.withAlphaComponent(0.4).cgColor)
+        context.setFillColor(UIColor.black.withAlphaComponent(0.5).cgColor)
         context.fill(rect)
 
         if let path = guidePath {
+            // Detected edge — show green guide.
             context.setBlendMode(.clear)
             path.fill()
             context.setBlendMode(.normal)
@@ -281,20 +282,55 @@ final class DocumentOverlayView: UIView {
             context.setLineWidth(3.0)
             path.stroke()
         } else {
-            // Default centered guide (ID card aspect ratio).
-            let margin: CGFloat = 40
-            let aspectRatio: CGFloat = 1.586
-            let width = rect.width - margin * 2
-            let height = width / aspectRatio
-            let guideRect = CGRect(x: margin, y: (rect.height - height) / 2, width: width, height: height)
+            // Default guide rectangle (ID card aspect ratio 85.6×53.98mm).
+            let horizontalPadding: CGFloat = 32
+            let guideWidth = rect.width - horizontalPadding * 2
+            let guideHeight = guideWidth / 1.586
+            // Position slightly above center to leave room for the capture button.
+            let guideY = (rect.height - guideHeight) / 2 - 40
+            let guideRect = CGRect(x: horizontalPadding, y: max(guideY, 80), width: guideWidth, height: guideHeight)
 
+            // Clear the document area.
+            let guidePath = UIBezierPath(roundedRect: guideRect, cornerRadius: 16)
             context.setBlendMode(.clear)
-            UIBezierPath(roundedRect: guideRect, cornerRadius: 12).fill()
+            guidePath.fill()
+
+            // Draw corner brackets instead of full border (cleaner look).
             context.setBlendMode(.normal)
-            context.setStrokeColor(UIColor.white.withAlphaComponent(0.6).cgColor)
-            context.setLineWidth(2.0)
-            context.setLineDash(phase: 0, lengths: [8, 4])
-            UIBezierPath(roundedRect: guideRect, cornerRadius: 12).stroke()
+            context.setStrokeColor(UIColor.white.withAlphaComponent(0.8).cgColor)
+            context.setLineWidth(3.0)
+            context.setLineDash(phase: 0, lengths: [])
+
+            let cornerLength: CGFloat = 30
+            let r = guideRect
+
+            // Top-left corner
+            context.move(to: CGPoint(x: r.minX, y: r.minY + cornerLength))
+            context.addLine(to: CGPoint(x: r.minX, y: r.minY + 8))
+            context.addQuadCurve(to: CGPoint(x: r.minX + 8, y: r.minY), control: CGPoint(x: r.minX, y: r.minY))
+            context.addLine(to: CGPoint(x: r.minX + cornerLength, y: r.minY))
+            context.strokePath()
+
+            // Top-right corner
+            context.move(to: CGPoint(x: r.maxX - cornerLength, y: r.minY))
+            context.addLine(to: CGPoint(x: r.maxX - 8, y: r.minY))
+            context.addQuadCurve(to: CGPoint(x: r.maxX, y: r.minY + 8), control: CGPoint(x: r.maxX, y: r.minY))
+            context.addLine(to: CGPoint(x: r.maxX, y: r.minY + cornerLength))
+            context.strokePath()
+
+            // Bottom-left corner
+            context.move(to: CGPoint(x: r.minX, y: r.maxY - cornerLength))
+            context.addLine(to: CGPoint(x: r.minX, y: r.maxY - 8))
+            context.addQuadCurve(to: CGPoint(x: r.minX + 8, y: r.maxY), control: CGPoint(x: r.minX, y: r.maxY))
+            context.addLine(to: CGPoint(x: r.minX + cornerLength, y: r.maxY))
+            context.strokePath()
+
+            // Bottom-right corner
+            context.move(to: CGPoint(x: r.maxX - cornerLength, y: r.maxY))
+            context.addLine(to: CGPoint(x: r.maxX - 8, y: r.maxY))
+            context.addQuadCurve(to: CGPoint(x: r.maxX, y: r.maxY - 8), control: CGPoint(x: r.maxX, y: r.maxY))
+            context.addLine(to: CGPoint(x: r.maxX, y: r.maxY - cornerLength))
+            context.strokePath()
         }
     }
 }

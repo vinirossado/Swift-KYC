@@ -151,6 +151,9 @@ public final class FaceQualityAnalyzer: Sendable {
     // MARK: - Liveness Challenge Evaluation
 
     /// Evaluates whether a liveness challenge has been completed.
+    ///
+    /// For blink: detects eyes closed (doesn't require baseline comparison).
+    /// For turn: checks yaw angle exceeds threshold.
     public func evaluateChallenge(
         _ challenge: LivenessChallenge,
         currentResult: AnalysisResult,
@@ -160,21 +163,19 @@ public final class FaceQualityAnalyzer: Sendable {
 
         switch challenge {
         case .blink:
-            // Eyes were open in baseline but now closed (or vice versa).
-            guard let baselineEyes = baselineResult?.eyesOpen,
-                  let currentEyes = currentResult.eyesOpen else {
+            // Detect eyes closed in current frame. The controller tracks
+            // the state machine (open→closed) across frames.
+            guard let currentEyes = currentResult.eyesOpen else {
                 return false
             }
-            return baselineEyes && !currentEyes
+            return !currentEyes
 
         case .turnLeft:
             guard let yaw = currentResult.yawAngle else { return false }
-            // Yaw > 20 degrees to the left (negative in Vision coordinates).
             return yaw < -15
 
         case .turnRight:
             guard let yaw = currentResult.yawAngle else { return false }
-            // Yaw > 20 degrees to the right.
             return yaw > 15
         }
     }
@@ -203,7 +204,8 @@ public final class FaceQualityAnalyzer: Sendable {
         let points = eye.normalizedPoints
         guard points.count >= 4 else { return true }
 
-        // Calculate vertical spread vs horizontal spread.
+        // The eye contour points form an ellipse-like shape.
+        // When open: taller vertically. When closed: nearly flat.
         let ys = points.map(\.y)
         let xs = points.map(\.x)
 
@@ -212,8 +214,9 @@ public final class FaceQualityAnalyzer: Sendable {
 
         guard horizontalSpread > 0 else { return true }
 
-        // Aspect ratio of the eye region — open eyes have a higher ratio.
+        // Aspect ratio: open eyes ~0.25-0.4, closed eyes ~0.05-0.12
+        // Threshold 0.18 gives a good balance between sensitivity and false positives.
         let aspectRatio = verticalSpread / horizontalSpread
-        return aspectRatio > 0.15
+        return aspectRatio > 0.18
     }
 }

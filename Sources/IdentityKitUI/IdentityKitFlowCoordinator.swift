@@ -17,6 +17,7 @@ public final class IdentityKitFlowCoordinator {
 
     private var capturedDocuments: [CapturedDocument] = []
     private var livenessFrames: [LivenessFrame] = []
+    private var flowScreenshots: [FlowScreenshot] = []
     private var pendingDocumentChecks: [DocumentType] = []
 
     public var viewController: UIViewController {
@@ -73,6 +74,7 @@ public final class IdentityKitFlowCoordinator {
 
     /// Requests camera permission before proceeding to capture screens.
     private func requestCameraAndProceed() {
+        captureCurrentScreenshot(stepLabel: "Introduction")
         let status = AVCaptureDevice.authorizationStatus(for: .video)
 
         switch status {
@@ -136,6 +138,7 @@ public final class IdentityKitFlowCoordinator {
         )
 
         vc.onCaptured = { [weak self] document in
+            self?.captureCurrentScreenshot(stepLabel: "\(documentType.displayName) — \(side == .front ? "Front" : "Back")")
             self?.capturedDocuments.append(document)
             self?.proceedToNextStep()
         }
@@ -160,6 +163,7 @@ public final class IdentityKitFlowCoordinator {
         )
 
         vc.onCompleted = { [weak self] frames in
+            self?.captureCurrentScreenshot(stepLabel: "Liveness Check")
             self?.livenessFrames = frames
             self?.proceedToNextStep()
         }
@@ -175,6 +179,7 @@ public final class IdentityKitFlowCoordinator {
         let vc = ResultReviewViewController(
             capturedDocuments: capturedDocuments,
             livenessFrames: livenessFrames,
+            flowScreenshots: flowScreenshots,
             theme: configuration.theme
         )
 
@@ -220,9 +225,24 @@ public final class IdentityKitFlowCoordinator {
         delegate?.identityKitDidCancel()
     }
 
+    // MARK: - Screenshot Capture
+
+    private func captureCurrentScreenshot(stepLabel: String) {
+        guard let topVC = navigationController.topViewController,
+              topVC.isViewLoaded, topVC.view.bounds.size != .zero else { return }
+        let renderer = UIGraphicsImageRenderer(bounds: topVC.view.bounds)
+        let image = renderer.image { ctx in
+            topVC.view.drawHierarchy(in: topVC.view.bounds, afterScreenUpdates: true)
+        }
+        if let jpegData = image.jpegData(compressionQuality: 0.7) {
+            flowScreenshots.append(FlowScreenshot(stepLabel: stepLabel, imageData: jpegData))
+        }
+    }
+
     private func restartFlow() {
         capturedDocuments.removeAll()
         livenessFrames.removeAll()
+        flowScreenshots.removeAll()
 
         pendingDocumentChecks.removeAll()
         for check in configuration.enabledChecks {

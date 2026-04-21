@@ -9,6 +9,7 @@ public final class ResultReviewViewController: UIViewController {
 
     private let capturedDocuments: [CapturedDocument]
     private let livenessFrames: [LivenessFrame]
+    private let flowScreenshots: [FlowScreenshot]
     private let theme: IdentityKitTheme
 
     /// Callback when the user confirms the captures.
@@ -77,10 +78,12 @@ public final class ResultReviewViewController: UIViewController {
     public init(
         capturedDocuments: [CapturedDocument],
         livenessFrames: [LivenessFrame],
+        flowScreenshots: [FlowScreenshot] = [],
         theme: IdentityKitTheme = .default
     ) {
         self.capturedDocuments = capturedDocuments
         self.livenessFrames = livenessFrames
+        self.flowScreenshots = flowScreenshots
         self.theme = theme
         super.init(nibName: nil, bundle: nil)
     }
@@ -165,6 +168,78 @@ public final class ResultReviewViewController: UIViewController {
                 )
                 stackView.addArrangedSubview(imageView)
             }
+        }
+
+        // Flow screenshots.
+        if !flowScreenshots.isEmpty {
+            let sectionLabel = makeSectionLabel("Flow screenshots")
+            stackView.addArrangedSubview(sectionLabel)
+
+            let scrollView = UIScrollView()
+            scrollView.translatesAutoresizingMaskIntoConstraints = false
+            scrollView.showsHorizontalScrollIndicator = false
+
+            let hStack = UIStackView()
+            hStack.translatesAutoresizingMaskIntoConstraints = false
+            hStack.axis = .horizontal
+            hStack.spacing = 12
+            hStack.alignment = .top
+
+            scrollView.addSubview(hStack)
+            NSLayoutConstraint.activate([
+                hStack.topAnchor.constraint(equalTo: scrollView.topAnchor),
+                hStack.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
+                hStack.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
+                hStack.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
+                hStack.heightAnchor.constraint(equalTo: scrollView.heightAnchor),
+                scrollView.heightAnchor.constraint(equalToConstant: 180)
+            ])
+
+            for screenshot in flowScreenshots {
+                let container = UIView()
+                container.translatesAutoresizingMaskIntoConstraints = false
+
+                let imageView = UIImageView()
+                imageView.translatesAutoresizingMaskIntoConstraints = false
+                imageView.image = UIImage(data: screenshot.imageData)
+                imageView.contentMode = .scaleAspectFill
+                imageView.layer.cornerRadius = ThemeApplier.cornerRadius(from: theme)
+                imageView.clipsToBounds = true
+                imageView.backgroundColor = .secondarySystemBackground
+                imageView.isAccessibilityElement = true
+                imageView.accessibilityLabel = "Screenshot: \(screenshot.stepLabel)"
+                imageView.accessibilityTraits = .image
+
+                let label = UILabel()
+                label.translatesAutoresizingMaskIntoConstraints = false
+                label.text = screenshot.stepLabel
+                label.font = .preferredFont(forTextStyle: .caption2)
+                label.textColor = ThemeApplier.textColor(from: theme).withAlphaComponent(0.6)
+                label.textAlignment = .center
+                label.numberOfLines = 2
+                label.adjustsFontForContentSizeCategory = true
+
+                container.addSubview(imageView)
+                container.addSubview(label)
+
+                NSLayoutConstraint.activate([
+                    imageView.topAnchor.constraint(equalTo: container.topAnchor),
+                    imageView.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+                    imageView.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+                    imageView.widthAnchor.constraint(equalToConstant: 120),
+                    imageView.heightAnchor.constraint(equalToConstant: 150),
+
+                    label.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 4),
+                    label.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+                    label.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+                    label.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+                    label.widthAnchor.constraint(equalToConstant: 120)
+                ])
+
+                hStack.addArrangedSubview(container)
+            }
+
+            stackView.addArrangedSubview(scrollView)
         }
     }
 

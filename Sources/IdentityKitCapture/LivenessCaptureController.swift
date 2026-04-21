@@ -50,6 +50,8 @@ public final class LivenessCaptureController: @unchecked Sendable {
     private var baselineResult: FaceQualityAnalyzer.AnalysisResult?
     private var challengeStartTime: Date?
     private var challengeCompleted = false
+    /// For blink: tracks that we saw eyes open before accepting a closed frame.
+    private var sawEyesOpen = false
 
     public init(
         challenges: [LivenessChallenge],
@@ -107,6 +109,7 @@ public final class LivenessCaptureController: @unchecked Sendable {
         challengeStartTime = Date()
         challengeCompleted = false
         baselineResult = nil
+        sawEyesOpen = false
 
         eventContinuation.yield(.challengeStarted(challenge))
     }
@@ -136,6 +139,16 @@ public final class LivenessCaptureController: @unchecked Sendable {
         }
 
         let challenge = challenges[currentChallengeIndex]
+
+        // For blink: require eyes open first, then detect closed.
+        if challenge == .blink {
+            if let eyesOpen = result.eyesOpen, eyesOpen {
+                sawEyesOpen = true
+            }
+            // Only accept blink if we confirmed eyes were open before
+            guard sawEyesOpen else { return }
+        }
+
         let passed = faceAnalyzer.evaluateChallenge(challenge, currentResult: result, baselineResult: baselineResult)
 
         if passed {

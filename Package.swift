@@ -86,6 +86,14 @@ let package = Package(
                 "IdentityKitStorage"
             ],
             swiftSettings: [strictConcurrency]
+        ),
+        .testTarget(
+            name: "IdentityKitSnapshotTests",
+            dependencies: [
+                "IdentityKitCore",
+                "IdentityKitUI"
+            ],
+            swiftSettings: [strictConcurrency]
         )
     ]
 )
