@@ -1,0 +1,68 @@
+name: Deploy DocC to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Sources/**'
+      - 'Scripts/generate-docs.sh'
+      - '.github/workflows/docs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+env:
+  DEVELOPER_DIR: /Applications/Xcode_16.2.app/Contents/Developer
+
+jobs:
+  build:
+    name: Build Documentation
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build DocC
+        run: |
+          swift build --target IdentityKitCore \
+            -Xswiftc -emit-symbol-graph \
+            -Xswiftc -emit-symbol-graph-dir \
+            -Xswiftc .build/docc/symbol-graphs
+
+          xcrun docc convert \
+            Sources/IdentityKitCore/Documentation.docc \
+            --additional-symbol-graph-dir .build/docc/symbol-graphs \
+            --output-path .build/docc/IdentityKitCore.doccarchive \
+            --fallback-display-name IdentityKitCore \
+            --fallback-bundle-identifier com.identitykit.core \
+            --fallback-bundle-version 1.0.0 \
+            --transform-for-static-hosting \
+            --hosting-base-path Swift-KYC
+
+      - name: Prepare pages artifact
+        run: |
+          mkdir -p _site
+          cp -R .build/docc/IdentityKitCore.doccarchive/* _site/
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
