@@ -20,6 +20,8 @@ targets:
       properties:
         UILaunchScreen: {}
         CFBundleDisplayName: IdentityKit Demo
+        NSCameraUsageDescription: IdentityKit needs camera access to capture your identity document and verify your face.
+        NSFaceIDUsageDescription: IdentityKit may use Face ID for additional security verification.
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
     settings:
