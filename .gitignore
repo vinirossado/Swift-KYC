@@ -29,3 +29,5 @@ fastlane/test_output/
 
 # DocC
 docs/*.doccarchive
+vendor/
+coverage.lcov
