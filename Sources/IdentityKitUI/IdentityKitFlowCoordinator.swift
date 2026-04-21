@@ -10,6 +10,7 @@ import IdentityKitCapture
 ///
 /// The coordinator owns a `UINavigationController` which is presented modally
 /// by the host app. It reports results back via the `IdentityKitDelegate`.
+@MainActor
 public final class IdentityKitFlowCoordinator {
 
     private let configuration: IdentityKitConfiguration
