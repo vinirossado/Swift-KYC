@@ -1,72 +1,102 @@
 #!/usr/bin/env bash
 #
 # build-xcframework.sh
-# Builds IdentityKit XCFramework for iOS device (arm64) and iOS Simulator (arm64).
-# Output: build/IdentityKit.xcframework
+# Archives each IdentityKit module and assembles XCFrameworks.
+# Output: build/<ModuleName>.xcframework
 #
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$PROJECT_ROOT"
 
-FRAMEWORK_NAME="IdentityKit"
-SCHEME="IdentityKit"
 BUILD_DIR="$PROJECT_ROOT/build"
-ARCHIVE_DIR="$BUILD_DIR/archives"
-
-DEVICE_ARCHIVE="$ARCHIVE_DIR/ios-device.xcarchive"
-SIMULATOR_ARCHIVE="$ARCHIVE_DIR/ios-simulator.xcarchive"
+DEVICE_ARCHIVE="$BUILD_DIR/ios-device.xcarchive"
+SIM_ARCHIVE="$BUILD_DIR/ios-simulator.xcarchive"
 
 TARGETS=(
   IdentityKitCore
-  IdentityKitCapture
-  IdentityKitUI
   IdentityKitNetwork
+  IdentityKitCapture
   IdentityKitStorage
+  IdentityKitUI
 )
 
-# ── Clean previous artifacts ──────────────────────────────────
-echo "==> Cleaning previous build artifacts..."
+# ── Clean ─────────────────────────────────────────────────────
+echo "==> Cleaning..."
 rm -rf "$BUILD_DIR"
-mkdir -p "$ARCHIVE_DIR"
+mkdir -p "$BUILD_DIR"
 
-# ── Archive for iOS device (arm64) ────────────────────────────
+# ── Archive for device ────────────────────────────────────────
 echo "==> Archiving for iOS device..."
 xcodebuild archive \
-  -scheme "$SCHEME" \
+  -scheme IdentityKit-Package \
   -destination "generic/platform=iOS" \
   -archivePath "$DEVICE_ARCHIVE" \
+  -derivedDataPath "$BUILD_DIR/dd" \
   SKIP_INSTALL=NO \
   BUILD_LIBRARY_FOR_DISTRIBUTION=YES \
-  OTHER_SWIFT_FLAGS="-no-verify-emitted-module-interface" \
-  | tail -1
+  -quiet
 
-# ── Archive for iOS Simulator (arm64) ─────────────────────────
+echo "    Device archive done."
+
+# ── Archive for simulator ─────────────────────────────────────
 echo "==> Archiving for iOS Simulator..."
 xcodebuild archive \
-  -scheme "$SCHEME" \
+  -scheme IdentityKit-Package \
   -destination "generic/platform=iOS Simulator" \
-  -archivePath "$SIMULATOR_ARCHIVE" \
+  -archivePath "$SIM_ARCHIVE" \
+  -derivedDataPath "$BUILD_DIR/dd" \
   SKIP_INSTALL=NO \
   BUILD_LIBRARY_FOR_DISTRIBUTION=YES \
-  OTHER_SWIFT_FLAGS="-no-verify-emitted-module-interface" \
-  | tail -1
+  -quiet
 
-# ── Assemble XCFramework ─────────────────────────────────────
-echo "==> Creating XCFramework..."
+echo "    Simulator archive done."
 
-FRAMEWORK_ARGS=()
+# ── Find where the frameworks/libs ended up ───────────────────
+echo ""
+echo "==> Archive contents:"
+echo "    Device:"
+find "$DEVICE_ARCHIVE" \( -name "*.framework" -o -name "*.a" \) -maxdepth 5 2>/dev/null | head -10
+echo "    Simulator:"
+find "$SIM_ARCHIVE" \( -name "*.framework" -o -name "*.a" \) -maxdepth 5 2>/dev/null | head -10
+
+# ── Create XCFrameworks ───────────────────────────────────────
+echo ""
+echo "==> Creating XCFrameworks..."
+
+SUCCESS=0
 for TARGET in "${TARGETS[@]}"; do
-  FRAMEWORK_ARGS+=(
-    -framework "$DEVICE_ARCHIVE/Products/Library/Frameworks/$TARGET.framework"
-    -framework "$SIMULATOR_ARCHIVE/Products/Library/Frameworks/$TARGET.framework"
-  )
+  # Search for framework or library in the archive
+  DEVICE_FW=$(find "$DEVICE_ARCHIVE" -name "$TARGET.framework" -type d 2>/dev/null | head -1)
+  DEVICE_LIB=$(find "$DEVICE_ARCHIVE" -name "lib${TARGET}.a" -type f 2>/dev/null | head -1)
+  SIM_FW=$(find "$SIM_ARCHIVE" -name "$TARGET.framework" -type d 2>/dev/null | head -1)
+  SIM_LIB=$(find "$SIM_ARCHIVE" -name "lib${TARGET}.a" -type f 2>/dev/null | head -1)
+
+  if [ -n "$DEVICE_FW" ] && [ -n "$SIM_FW" ]; then
+    echo "    $TARGET.xcframework (framework)"
+    xcodebuild -create-xcframework \
+      -framework "$DEVICE_FW" \
+      -framework "$SIM_FW" \
+      -output "$BUILD_DIR/$TARGET.xcframework"
+    SUCCESS=$((SUCCESS + 1))
+  elif [ -n "$DEVICE_LIB" ] && [ -n "$SIM_LIB" ]; then
+    echo "    $TARGET.xcframework (static lib)"
+    xcodebuild -create-xcframework \
+      -library "$DEVICE_LIB" \
+      -library "$SIM_LIB" \
+      -output "$BUILD_DIR/$TARGET.xcframework"
+    SUCCESS=$((SUCCESS + 1))
+  else
+    echo "    SKIP: $TARGET"
+  fi
 done
 
-xcodebuild -create-xcframework \
-  "${FRAMEWORK_ARGS[@]}" \
-  -output "$BUILD_DIR/$FRAMEWORK_NAME.xcframework"
-
 echo ""
-echo "==> XCFramework created at:"
-echo "    $BUILD_DIR/$FRAMEWORK_NAME.xcframework"
+if [ $SUCCESS -gt 0 ]; then
+  echo "==> $SUCCESS XCFramework(s) created:"
+  du -sh "$BUILD_DIR"/*.xcframework
+else
+  echo "==> No XCFrameworks created."
+  echo "    Check archive contents above."
+fi
