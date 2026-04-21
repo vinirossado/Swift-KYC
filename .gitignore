@@ -1,6 +1,7 @@
 # Xcode
 *.xcodeproj/xcuserdata/
 *.xcworkspace/xcuserdata/
+*.xcworkspace/xcuserdata/
 DerivedData/
 *.xcscmblueprint
 *.xccheckout

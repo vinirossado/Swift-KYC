@@ -23,14 +23,6 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 
 Run all package tests with code coverage
 
-### ios build_xcframework
-
-```sh
-[bundle exec] fastlane ios build_xcframework
-```
-
-Build XCFramework for iOS device + simulator
-
 ### ios release
 
 ```sh
