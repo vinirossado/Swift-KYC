@@ -1,15 +1,13 @@
 #if canImport(UIKit)
 import UIKit
+import AVFoundation
 import IdentityKitCore
 import IdentityKitCapture
 
 /// Orchestrates the full verification flow as a sequence of view controllers.
 ///
 /// Uses the coordinator pattern to decouple navigation from individual screens.
-/// The flow: Intro → Document Capture (front → back if needed) → Liveness → Review → Done.
-///
-/// The coordinator owns a `UINavigationController` which is presented modally
-/// by the host app. It reports results back via the `IdentityKitDelegate`.
+/// The flow: Intro → Camera Permission → Document Capture → Liveness → Review → Done.
 @MainActor
 public final class IdentityKitFlowCoordinator {
 
@@ -17,12 +15,10 @@ public final class IdentityKitFlowCoordinator {
     private weak var delegate: IdentityKitDelegate?
     private let navigationController: UINavigationController
 
-    // State accumulated during the flow.
     private var capturedDocuments: [CapturedDocument] = []
     private var livenessFrames: [LivenessFrame] = []
     private var pendingDocumentChecks: [DocumentType] = []
 
-    /// The view controller to present — a `UINavigationController` wrapping the flow.
     public var viewController: UIViewController {
         navigationController
     }
@@ -35,14 +31,12 @@ public final class IdentityKitFlowCoordinator {
         navigationController.modalPresentationStyle = .fullScreen
         navigationController.navigationBar.prefersLargeTitles = false
 
-        // Apply theme to navigation bar.
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
         appearance.backgroundColor = .systemBackground
         navigationController.navigationBar.standardAppearance = appearance
         navigationController.navigationBar.scrollEdgeAppearance = appearance
 
-        // Extract document types from enabled checks.
         for check in configuration.enabledChecks {
             if case .document(let docType) = check {
                 pendingDocumentChecks.append(docType)
@@ -50,7 +44,6 @@ public final class IdentityKitFlowCoordinator {
         }
     }
 
-    /// Starts the verification flow by showing the intro screen.
     public func start() {
         let intro = makeIntroViewController()
         navigationController.setViewControllers([intro], animated: false)
@@ -66,10 +59,9 @@ public final class IdentityKitFlowCoordinator {
             theme: configuration.theme
         )
         vc.onAction = { [weak self] in
-            self?.proceedToNextStep()
+            self?.requestCameraAndProceed()
         }
 
-        // Cancel button.
         vc.navigationItem.leftBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .cancel,
             target: self,
@@ -77,6 +69,50 @@ public final class IdentityKitFlowCoordinator {
         )
 
         return vc
+    }
+
+    /// Requests camera permission before proceeding to capture screens.
+    private func requestCameraAndProceed() {
+        let status = AVCaptureDevice.authorizationStatus(for: .video)
+
+        switch status {
+        case .authorized:
+            proceedToNextStep()
+
+        case .notDetermined:
+            AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
+                Task { @MainActor in
+                    if granted {
+                        self?.proceedToNextStep()
+                    } else {
+                        self?.showPermissionDeniedAlert()
+                    }
+                }
+            }
+
+        case .denied, .restricted:
+            showPermissionDeniedAlert()
+
+        @unknown default:
+            proceedToNextStep()
+        }
+    }
+
+    private func showPermissionDeniedAlert() {
+        let alert = UIAlertController(
+            title: "Camera Access Required",
+            message: "IdentityKit needs camera access to capture your document and verify your identity. Please enable it in Settings.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "Open Settings", style: .default) { _ in
+            if let url = URL(string: UIApplication.openSettingsURLString) {
+                UIApplication.shared.open(url)
+            }
+        })
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { [weak self] _ in
+            self?.delegate?.identityKitDidFail(with: .cameraPermissionDenied)
+        })
+        navigationController.present(alert, animated: true)
     }
 
     private func proceedToNextStep() {
@@ -105,7 +141,7 @@ public final class IdentityKitFlowCoordinator {
         }
 
         vc.onError = { [weak self] error in
-            self?.handleError(error)
+            self?.showErrorAlert(error)
         }
 
         navigationController.pushViewController(vc, animated: true)
@@ -129,7 +165,7 @@ public final class IdentityKitFlowCoordinator {
         }
 
         vc.onError = { [weak self] error in
-            self?.handleError(error)
+            self?.showErrorAlert(error)
         }
 
         navigationController.pushViewController(vc, animated: true)
@@ -153,7 +189,7 @@ public final class IdentityKitFlowCoordinator {
         navigationController.pushViewController(vc, animated: true)
     }
 
-    // MARK: - Completion
+    // MARK: - Completion & Error Handling
 
     private func completeFlow() {
         let result = VerificationResult(
@@ -164,8 +200,20 @@ public final class IdentityKitFlowCoordinator {
         delegate?.identityKitDidComplete(with: result)
     }
 
-    private func handleError(_ error: IdentityKitError) {
-        delegate?.identityKitDidFail(with: error)
+    /// Shows an error alert with retry/cancel options instead of failing silently.
+    private func showErrorAlert(_ error: IdentityKitError) {
+        let alert = UIAlertController(
+            title: "Verification Error",
+            message: error.localizedDescription,
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "Retry", style: .default) { [weak self] _ in
+            self?.navigationController.popViewController(animated: true)
+        })
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { [weak self] _ in
+            self?.delegate?.identityKitDidFail(with: error)
+        })
+        navigationController.present(alert, animated: true)
     }
 
     @objc private func cancelFlow() {
@@ -176,7 +224,6 @@ public final class IdentityKitFlowCoordinator {
         capturedDocuments.removeAll()
         livenessFrames.removeAll()
 
-        // Re-populate pending doc checks.
         pendingDocumentChecks.removeAll()
         for check in configuration.enabledChecks {
             if case .document(let docType) = check {
